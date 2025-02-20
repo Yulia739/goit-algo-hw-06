@@ -1,39 +1,42 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# Створення зваженого графа
-G = nx.Graph()
+# Функція для створення графа
+def create_weighted_graph():
+    graph = nx.Graph()
+    nodes = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    graph.add_nodes_from(nodes)
+    
+    edges = [
+        ("A", "B", 4), ("A", "C", 2), ("B", "D", 5), ("C", "D", 1),
+        ("C", "E", 6), ("D", "F", 3), ("E", "F", 2), ("E", "G", 5),
+        ("F", "H", 4), ("G", "H", 3)
+    ]
+    
+    graph.add_weighted_edges_from(edges)
+    
+    return graph, edges
 
-# Додавання вершин
-nodes = ["A", "B", "C", "D", "E", "F", "G", "H"]
-G.add_nodes_from(nodes)
+# Функція пошуку найкоротшого шляху
+def dijkstra_shortest_path(graph, source, destination):
+    shortest_path = nx.shortest_path(graph, source=source, target=destination, weight="weight")
+    path_length = nx.shortest_path_length(graph, source=source, target=destination, weight="weight")
+    return shortest_path, path_length
 
-# Додавання зважених ребер (дороги з вказаною довжиною)
-edges = [
-    ("A", "B", 4), ("A", "C", 2), ("B", "D", 5), ("C", "D", 1),
-    ("C", "E", 6), ("D", "F", 3), ("E", "F", 2), ("E", "G", 5),
-    ("F", "H", 4), ("G", "H", 3)
-]
-G.add_weighted_edges_from(edges)
-
-# Функція для знаходження найкоротшого шляху за алгоритмом Дейкстри
-def dijkstra_shortest_path(graph, start, goal):
-    return nx.shortest_path(graph, source=start, target=goal, weight="weight")
-
-# Виконання алгоритму Дейкстри
+# Ініціалізація графа
+transport_graph, edge_weights = create_weighted_graph()
 start_node, goal_node = "A", "H"
-dijkstra_result = dijkstra_shortest_path(G, start_node, goal_node)
-path_length = nx.shortest_path_length(G, source=start_node, target=goal_node, weight="weight")
+shortest_route, total_distance = dijkstra_shortest_path(transport_graph, start_node, goal_node)
 
 # Виведення результатів
-print(f"Найкоротший шлях за Дейкстрою від {start_node} до {goal_node}: {dijkstra_result}")
-print(f"Загальна вага шляху: {path_length}")
+print(f"Найкоротший маршрут від {start_node} до {goal_node}: {shortest_route}")
+print(f"Загальна вага шляху: {total_distance}")
 
 # Візуалізація графа
-plt.figure(figsize=(6, 6))
-pos = nx.spring_layout(G)  # Розташування вершин
-nx.draw(G, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=1500, font_size=12)
-edge_labels = {(u, v): w for u, v, w in edges}
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-plt.title("Зважений транспортний граф")
+plt.figure(figsize=(7, 7))
+layout = nx.spring_layout(transport_graph, seed=42)
+nx.draw(transport_graph, layout, with_labels=True, node_color="skyblue", edge_color="black", node_size=1600, font_size=14)
+labels = {(u, v): w for u, v, w in edge_weights}
+nx.draw_networkx_edge_labels(transport_graph, layout, edge_labels=labels)
+plt.title("Оптимізований граф маршрутів")
 plt.show()
