@@ -1,42 +1,67 @@
 import networkx as nx
+import heapq
 import matplotlib.pyplot as plt
+G = nx.Graph()
 
-# Функція для створення графа
-def create_weighted_graph():
-    graph = nx.Graph()
-    nodes = ["A", "B", "C", "D", "E", "F", "G", "H"]
-    graph.add_nodes_from(nodes)
-    
-    edges = [
-        ("A", "B", 4), ("A", "C", 2), ("B", "D", 5), ("C", "D", 1),
-        ("C", "E", 6), ("D", "F", 3), ("E", "F", 2), ("E", "G", 5),
-        ("F", "H", 4), ("G", "H", 3)
-    ]
-    
-    graph.add_weighted_edges_from(edges)
-    
-    return graph, edges
+stations = ["A", "B", "C", "D", "E", "F", "G", "H"]
+G.add_nodes_from(stations)
 
-# Функція пошуку найкоротшого шляху
-def dijkstra_shortest_path(graph, source, destination):
-    shortest_path = nx.shortest_path(graph, source=source, target=destination, weight="weight")
-    path_length = nx.shortest_path_length(graph, source=source, target=destination, weight="weight")
-    return shortest_path, path_length
+edges = [
+    ("A", "B", 4),
+    ("A", "C", 3),
+    ("B", "D", 2),
+    ("C", "D", 4),
+    ("C", "E", 7),
+    ("D", "F", 5),
+    ("E", "F", 1),
+    ("F", "G", 2),
+    ("G", "H", 3),
+    ("E", "H", 6)
+]
+G.add_weighted_edges_from(edges)
 
-# Ініціалізація графа
-transport_graph, edge_weights = create_weighted_graph()
-start_node, goal_node = "A", "H"
-shortest_route, total_distance = dijkstra_shortest_path(transport_graph, start_node, goal_node)
+# Алгоритм Дейкстри
+def dijkstra(graph, start):
+    distances = {node: float('inf') for node in graph.nodes}
+    distances[start] = 0
+    visited = set()
+    priority_queue = [(0, start)]
+
+    while priority_queue:
+        current_distance, current_node = heapq.heappop(priority_queue)
+
+        if current_node in visited:
+            continue
+        visited.add(current_node)
+
+        for neighbor in graph.neighbors(current_node):
+            weight = graph[current_node][neighbor]['weight']
+            distance = current_distance + weight
+
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(priority_queue, (distance, neighbor))
+
+    return distances
+
+# Знаходження найкоротших шляхів з кожної вершини
+shortest_paths = {}
+
+for node in G.nodes:
+    shortest_paths[node] = dijkstra(G, node)
 
 # Виведення результатів
-print(f"Найкоротший маршрут від {start_node} до {goal_node}: {shortest_route}")
-print(f"Загальна вага шляху: {total_distance}")
+for source, targets in shortest_paths.items():
+    print(f"Найкоротші відстані від {source}:")
+    for target, distance in targets.items():
+        print(f"  до {target}: {distance}")
+    print()
 
 # Візуалізація графа
-plt.figure(figsize=(7, 7))
-layout = nx.spring_layout(transport_graph, seed=42)
-nx.draw(transport_graph, layout, with_labels=True, node_color="skyblue", edge_color="black", node_size=1600, font_size=14)
-labels = {(u, v): w for u, v, w in edge_weights}
-nx.draw_networkx_edge_labels(transport_graph, layout, edge_labels=labels)
-plt.title("Оптимізований граф маршрутів")
+pos = nx.spring_layout(G)  # Позиції для вершин
+plt.figure(figsize=(8, 6))
+nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=2000, font_size=12, font_weight='bold')
+labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+plt.title("Граф з найкоротшими шляхами")
 plt.show()
